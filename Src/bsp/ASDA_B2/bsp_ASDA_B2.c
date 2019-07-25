@@ -253,7 +253,7 @@ void FunCode_Write_DWord_Param(uint8_t SlaveAddr,uint16_t RegAddr,uint16_t DataN
     {
       UsartState = Ready;
       printf("通讯超时 数据帧:\n");
-      printf("%s\n",TxBuf);
+      //printf("%s\n",TxBuf);
       break;
     }  
   }
