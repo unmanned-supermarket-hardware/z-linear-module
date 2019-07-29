@@ -579,18 +579,17 @@ ARM Macro Assembler    Page 9
               00000000 
 Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=ys-f1pro\startup_stm32f103xe.d -oys-f1pro\startup_stm32f103xe.o -I
-"C:\Users\Admin\Desktop\Ó²Ê¯ËÅ·þµç»ú¿ØÖÆ×ÊÁÏ\YS-F1Pro¿ª·¢°å³ÌÐò\YSF1_HAL-300. Ë
-Å·þÇý¶¯Æ÷ËÙ¶ÈÄ£Ê½\YSF1_HAL-300. ËÅ·þÇý¶¯Æ÷ËÙ¶ÈÄ£Ê½\MDK-ARM\RTE" -ID:\Keil_v5\AR
-M\PACK\Keil\STM32F1xx_DFP\1.0.5\Device\Include -ID:\Keil_v5\ARM\CMSIS\Include -
--predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="__UVISI
+"C:\Users\Admin\Desktop\YSF1_HAL-300. ËÅ·þÇý¶¯Æ÷ËÙ¶ÈÄ£Ê½\MDK-ARM\RTE" -ID:\Keil
+_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Device\Include -ID:\Keil_v5\ARM\CMSIS\Inc
+lude --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 514" -
+-predefine="STM32F10X_HD SETA 1" --list=startup_stm32f103xe.lst startup_stm32f1
 
 
 
 ARM Macro Assembler    Page 10 
 
 
-ON_VERSION SETA 514" --predefine="STM32F10X_HD SETA 1" --list=startup_stm32f103
-xe.lst startup_stm32f103xe.s
+03xe.s
 
 
 
@@ -1462,4 +1461,4 @@ Symbol: __main
       At line 168 in file startup_stm32f103xe.s
 Comment: __main used once
 2 symbols
-423 symbols in table
+422 symbols in table

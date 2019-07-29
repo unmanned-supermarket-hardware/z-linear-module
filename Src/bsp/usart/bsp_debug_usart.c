@@ -23,7 +23,7 @@
 /* 私有宏定义 ----------------------------------------------------------------*/
 /* 私有变量 ------------------------------------------------------------------*/
 
-u8 aRxBuffer4[RXBUFFERSIZE];//HAL??????????
+uint8_t aRxBuffer4[RXBUFFERSIZE];//HAL??????????
 UART_HandleTypeDef UART4_Handler; //UART?? 
 
 
@@ -35,6 +35,11 @@ UART_HandleTypeDef husartx_rs485;
 /* 扩展变量 ------------------------------------------------------------------*/
 /* 私有函数原形 --------------------------------------------------------------*/
 /* 函数体 --------------------------------------------------------------------*/
+
+void send_msg_to_good_getter(uint8_t *msg,int len)
+{
+	HAL_UART_Transmit(&UART4_Handler,msg,len,0x0F);
+}
 
 /**
   * 函数功能: 串口硬件初始化配置
@@ -245,7 +250,7 @@ void RS485_USARTx_Init(void)
   HAL_NVIC_EnableIRQ(RS485_DMAx_CHANNELn_IRQn);  
 }
 //-------------------------------------------------
-void uart4_init(u32 bound)
+void uart4_init(uint32_t bound)
 {	
 	//UART ?????
 	UART4_Handler.Instance=UART4;					    //USART
@@ -257,18 +262,20 @@ void uart4_init(u32 bound)
 	UART4_Handler.Init.Mode=UART_MODE_TX_RX;		    //????
 	HAL_UART_Init(&UART4_Handler);					    //HAL_UART_Init()???UART1
 	
-	HAL_UART_Receive_IT(&UART4_Handler, (u8 *)aRxBuffer4, RXBUFFERSIZE);//??????????:???UART_IT_RXNE,?????????????????????
+	HAL_UART_Receive_IT(&UART4_Handler, (uint8_t *)aRxBuffer4, RXBUFFERSIZE);//??????????:???UART_IT_RXNE,?????????????????????
   
 }
  
 #define USART_REC_LEN  			200  	//定义最大接收字节数 200
-u8 UART4_RX_BUF[64]; //接收到的数据
-u16 UART4_RX_STA=0; 
-u8 UART4_COUNT = 0;
+uint8_t UART4_RX_BUF[64]; //接收到的数据
+uint16_t UART4_RX_STA=0; 
+uint8_t UART4_COUNT = 0;
 double d =0;
 char dStr[5];
-u8 UART4_RX_FLAG = 0;
+uint8_t UART4_RX_FLAG = 0;
 extern double current_height_in_m;
+extern uint32_t distanceModuleMonitor ;
+extern int is_distance_right;
 //接收状态
 //bit15，	接收完成标志
 //bit14，	接收到0x0d
@@ -277,7 +284,7 @@ void UART4_IRQHandler(void)
 {
 	if((__HAL_UART_GET_FLAG(&UART4_Handler,UART_FLAG_RXNE)!=RESET))  //????(?????????0x0d 0x0a??)
 	{
-		u8 res=UART4->DR; 
+		uint8_t res=UART4->DR; 
 		char strTemp[64];
 		//HAL_UART_Transmit(&UART4_Handler,&res,1,1000);	//????????
 		if((UART4_RX_STA&0x8000)==0)//接收未完成
@@ -296,15 +303,19 @@ void UART4_IRQHandler(void)
 						sprintf(strTemp,"%s\r\n",dStr);
 						
 						//usart1_sendString(strTemp,strlen(strTemp));
+						distanceModuleMonitor = 0; //每接到一组数据就清零
 						if(UART4_RX_BUF[0] =='D')
 						{
 				
 							current_height_in_m = atof(dStr);
-							//current_height_mm = 5;
+							is_distance_right = 1;
 						}
 							
 						else
+						{
 							current_height_in_m =-1;
+							is_distance_right = 1;
+						}
 						//-------------------
 
 						UART4_RX_STA = 0;

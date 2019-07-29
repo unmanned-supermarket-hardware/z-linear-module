@@ -9,8 +9,8 @@
 
 
 #define RXBUFFERSIZE   1 					//????
-extern u8 aRxBuffer4[RXBUFFERSIZE];			//HAL?USART??Buffer
-void uart4_init(u32 bound);
+extern uint8_t aRxBuffer4[RXBUFFERSIZE];			//HAL?USART??Buffer
+void uart4_init(uint32_t bound);
 
 
 
@@ -80,7 +80,7 @@ extern UART_HandleTypeDef UART4_Handler;
 /* º¯ÊýÉùÃ÷ ------------------------------------------------------------------*/
 void MX_DEBUG_USART_Init(void);
 void RS485_USARTx_Init(void);
-
+void send_msg_to_good_getter(uint8_t *msg,int len);
 
 #endif  /* __BSP_DEBUG_USART_H__ */
 

@@ -15,49 +15,29 @@
   ******************************************************************************
   */
 /* 包含头文件 ----------------------------------------------------------------*/
-#include "stm32f1xx_hal.h"
-#include "usart/bsp_debug_usart.h"
-#include "string.h"
-#include "ASDA_B2/bsp_ASDA_B2.h"
-#include "timer/timer.h"
+
+#include "head.h"
 /* 私有类型定义 --------------------------------------------------------------*/
 /* 私有宏定义 ----------------------------------------------------------------*/
 /* 私有变量 ------------------------------------------------------------------*/
 __IO uint8_t Rx_Buf[50];       //接收数据缓存
 
 
-extern u8 UART4_RX_BUF[64]; //接收到的数据
+extern uint8_t UART4_RX_BUF[64]; //接收到的数据
+
+double destination_height;
 
 
-double current_height_in_m;
+uint8_t new_msg = 0;
+uint8_t USART1_JSON_BUF[256]; //接收到的数据
+uint8_t USART1_RX_STA=0; 
+uint16_t USART1_JSON_SIZE = 0;
+uint16_t USART1_JSON_INDEX = 0;
+uint8_t	USART1_JSON_CRC = 0;
 
-//速度和距离定义
-#define FAST_VELOCITY 1500  //快速
-#define SLOW_VELOCITY 600   //慢速
-#define SLOW_RANGE 0.05  //距离差小于0.05m的时候减速
-#define EQUAL_RANGE 0.005  //距离差不超过0.005m的时候认为距离相等
-
-//状态定义
-#define GO -2
-#define STOP -1
-#define FAR2HIGH 0    
-#define NEAR2HIGH 1
-#define TOO_HIGH 2
-#define FAR2LOW 3
-#define NEAR2LOW 4
-#define TOO_LOW 5
-
-//方向定义
-#define DIR_HIGH -1
-#define DIR_LOW 1
-
-//控制模组运动到某个固定位置
-int last_state = STOP;
-int current_state = STOP;
-int state = STOP;
-void goTo(double destination_height_in_m);
-
-
+int is_distance_receiving = 1;  //表示红外一直在接收数据
+int is_distance_right = 1;      //表示红外接收数据正常，为D = ***m，而非Error
+uint32_t distanceModuleMonitor = 0;
 
 /* 函数体 --------------------------------------------------------------------*/
 /**
@@ -106,8 +86,7 @@ void SystemClock_Config(void)
   */
 int main(void)
 {  
-  uint8_t i= 0;
-  int8_t dir = 1;
+
   /* 复位所有外设，初始化Flash接口和系统滴答定时器 */
   HAL_Init();
   /* 配置系统时钟 */
@@ -131,7 +110,7 @@ int main(void)
   __HAL_DMA_DISABLE_IT(&hdma_rs485_rx, DMA_IT_TE);
   
 	/* 初始化测距模块 */
-	HAL_UART_Transmit(&UART4_Handler,(u8 *)"iFACM:0",7,0x0F);
+	HAL_UART_Transmit(&UART4_Handler,(uint8_t *)"iFACM:0",7,0x0F);
   /* 初始化ASDA-B2参数,配置为速度模式*/
   ASDAB2_Init();          
   /* 设置SP3速度值为600*0.1r/min  60r/min */
@@ -149,14 +128,41 @@ int main(void)
 //		SetSpeed(REG_SP3,600);      
 //		HAL_Delay(2000);
 //		SetSpeed(REG_SP3,-600); 
-		if(state == GO)
+
+//		goTo(0.3);
+//		HAL_Delay(2000);
+//		goTo(0.5);
+//		HAL_Delay(2000);
+		
+		
+		
+		//测距模块监视
+		distanceModuleMonitor++;
+		if(distanceModuleMonitor>655344)
 		{
-			goTo(0.5);
+			//printf("too long without distance data received!\n");
+			is_distance_receiving = 0;
 		}
-		goTo(0.3);
-		HAL_Delay(2000);
-		goTo(0.5);
-		HAL_Delay(2000);
+		else
+			is_distance_receiving = 1;
+		
+		//如果测距模块工作状态不正常，
+		if(!is_distance_receiving || !is_distance_right)
+		{
+			//电机运动逻辑得考虑啊
+			;
+		}
+		
+		//处理取货单元发来的消息
+		if(new_msg)
+		{
+			//printf("%s\n",USART1_JSON_BUF);
+			switch(resolve_msg())
+			{
+				case(MSG_GO_TO_HEIGHT):{on_go_to_height_msg();break;}
+			}
+			new_msg = 0;
+		}
   }
 }
 
@@ -167,83 +173,6 @@ int main(void)
 
 
 
-void goTo(double destination_height_in_m)
-{
-	printf("goto");
-	double distance2Go;
-			SetSpeed(REG_SP3,0);
-		StartServo(); 
-	
-	while(1)   //
-	{
-		
-		if(current_height_in_m < 0 )  //红外数据错误
-		{
-			printf("error: %f\n",current_height_in_m);
-			SetSpeed(REG_SP3,0);
-			StopServo();          
-			return;
-		}
-		//
-		distance2Go = destination_height_in_m - current_height_in_m;
-
-		//上升
-		if(distance2Go > 0)
-		{
-			if(distance2Go >SLOW_RANGE && state != FAR2HIGH)  //还差的远，快点儿走
-			{
-				printf("FAR2HIGH");
-				SetSpeed(REG_SP3,FAST_VELOCITY * DIR_HIGH);
-				
-			
-				state = FAR2HIGH;
-			}
-			else if(distance2Go > EQUAL_RANGE && distance2Go < SLOW_RANGE && state!= NEAR2HIGH)   
-			{
-				printf("NEAR2HIGH");
-				SetSpeed(REG_SP3,SLOW_VELOCITY* DIR_HIGH);
-			
-				state = NEAR2HIGH;
-			}
-			else if(distance2Go < EQUAL_RANGE && distance2Go > -EQUAL_RANGE )   
-			{
-				printf("arrive");
-				SetSpeed(REG_SP3,0);
-				StopServo();  
-				state = STOP;
-				return;
-			}
-		}
-		//下降
-		else if(distance2Go < 0) 
-		{
-			if(-distance2Go >SLOW_RANGE && state != FAR2LOW)  //还差的远，快点儿走
-			{
-				printf("FAR2LOW");
-				SetSpeed(REG_SP3,FAST_VELOCITY * DIR_LOW);
-				
-				state = FAR2LOW;
-			}
-			else if(-distance2Go > EQUAL_RANGE && -distance2Go < SLOW_RANGE && state!= NEAR2LOW)   
-			{
-				printf("NEAR2LOW");
-				SetSpeed(REG_SP3,SLOW_VELOCITY* DIR_LOW);
-			
-				state = NEAR2LOW;
-			}
-			else if(-distance2Go < EQUAL_RANGE && distance2Go > -EQUAL_RANGE )   
-			{
-				printf("arrive");
-				SetSpeed(REG_SP3,0);
-				StopServo();  
-				state = STOP;
-				return;
-			}
-		}
-
-	}
-	
-}
 
 /**
   * 函数功能: 串口接收回调函数
@@ -272,13 +201,55 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
     }
     else i = 0;
   }
+	//与取货单元通信的串口中断处理函数
+#define UART_IDLE 0
+#define WELL 1 //收到#
+#define EXCLAMATION 2 //收到！
+#define HIGH_SIZE 3
+#define LOW_SIZE 4
+#define JSON_END 5
+#define STAR 6
+#define CRC_CHECK 7
+#define AND 8
 	if(UartHandle->Instance == DEBUG_USARTx)
   {
-    u8 temp = husart_debug.Instance->DR;
-    if(temp == 'g')
+    uint8_t res = husart_debug.Instance->DR;
+    switch(USART1_RX_STA)
 		{
-			state = GO;
-		}
+			case(UART_IDLE):	{if(res == '#') 							USART1_RX_STA = WELL;					break;}
+			case(WELL):				{if(res == '!') 							USART1_RX_STA = EXCLAMATION;	break;}
+			case(EXCLAMATION):{USART1_JSON_SIZE = res<<8; 	USART1_RX_STA = HIGH_SIZE;		break;}
+			case(HIGH_SIZE):	{USART1_JSON_SIZE += res; 		USART1_RX_STA = LOW_SIZE;			break;}
+			case(LOW_SIZE):		
+			{
+				if(USART1_JSON_INDEX < USART1_JSON_SIZE -1)
+				{
+					USART1_JSON_BUF[USART1_JSON_INDEX]=res; 
+					USART1_JSON_INDEX++;
+				}
+				else if(USART1_JSON_INDEX == USART1_JSON_SIZE -1) //JSON的最后一个字节了
+				{
+					USART1_JSON_BUF[USART1_JSON_INDEX]=res; 
+					USART1_JSON_BUF[USART1_JSON_SIZE]= '\0'; 
+					USART1_JSON_INDEX = 0;
+					USART1_RX_STA = JSON_END;
+					
+				}					
+				break;
+			}
+			case(JSON_END):		{if(res == '*')								USART1_RX_STA = STAR; 				break;}
+			case(STAR):				{USART1_JSON_CRC = res; 			USART1_RX_STA = CRC_CHECK;		break;}
+			case(CRC_CHECK):  
+			{
+				if(res == '&')
+				{
+					USART1_RX_STA = UART_IDLE;
+					new_msg = 1;
+				}
+				break;
+			}
+		}	
+		
   }
 }
 

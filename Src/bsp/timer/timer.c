@@ -12,7 +12,7 @@
 //Copyright(C) 广州市星翼电子科技有限公司 2014-2024
 //All rights reserved									  
 ////////////////////////////////////////////////////////////////////////////////// 	
-extern u8 UART4_RX_BUF[64]; //接收到的数据
+extern uint8_t UART4_RX_BUF[64]; //接收到的数据
 
 extern double current_height_in_m;
 
@@ -24,7 +24,7 @@ TIM_HandleTypeDef TIM3_Handler;      //定时器句柄
 //定时器溢出时间计算方法:Tout=((arr+1)*(psc+1))/Ft us.
 //Ft=定时器工作频率,单位:Mhz
 //这里使用的是定时器3!
-void TIM3_Init(u16 arr,u16 psc)
+void TIM3_Init(uint16_t arr,uint16_t psc)
 {  
     TIM3_Handler.Instance=TIM3;                          //通用定时器3
     TIM3_Handler.Init.Prescaler=psc;                     //分频系数
