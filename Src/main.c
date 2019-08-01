@@ -129,7 +129,7 @@ int main(void)
 //		HAL_Delay(2000);
 //		SetSpeed(REG_SP3,-600); 
 
-//		goTo(0.3);
+//		goTo(0.7);
 //		HAL_Delay(2000);
 //		goTo(0.5);
 //		HAL_Delay(2000);
@@ -163,6 +163,13 @@ int main(void)
 			}
 			new_msg = 0;
 		}
+
+
+
+
+
+
+		
   }
 }
 

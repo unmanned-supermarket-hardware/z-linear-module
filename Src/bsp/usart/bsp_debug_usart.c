@@ -38,7 +38,7 @@ UART_HandleTypeDef husartx_rs485;
 
 void send_msg_to_good_getter(uint8_t *msg,int len)
 {
-	HAL_UART_Transmit(&UART4_Handler,msg,len,0x0F);
+	HAL_UART_Transmit(&husart_debug,msg,len,0x0F);
 }
 
 /**

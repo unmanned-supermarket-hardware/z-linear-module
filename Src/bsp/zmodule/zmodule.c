@@ -140,7 +140,7 @@ void on_go_to_height_msg()
 	//告知取货单元已经到达相应位置
 	root=cJSON_CreateObject();
 
-	cJSON_AddStringToObject(root,"businessType","0015");
+	cJSON_AddStringToObject(root,"businessType","0023");
 	cJSON_AddNumberToObject(root,"Result",result);
 	strSendLen = generate_send_str(root,strSend);
 	if(strSendLen >0)

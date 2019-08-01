@@ -581,15 +581,15 @@ Command Line: --debug --xref --diag_suppress=9931 --cpu=Cortex-M3 --apcs=interw
 ork --depend=ys-f1pro\startup_stm32f103xe.d -oys-f1pro\startup_stm32f103xe.o -I
 "C:\Users\Admin\Desktop\YSF1_HAL-300. 伺服驱动器速度模式\MDK-ARM\RTE" -ID:\Keil
 _v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Device\Include -ID:\Keil_v5\ARM\CMSIS\Inc
-lude --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 514" -
--predefine="STM32F10X_HD SETA 1" --list=startup_stm32f103xe.lst startup_stm32f1
+lude --predefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="_
+_UVISION_VERSION SETA 514" --predefine="STM32F10X_HD SETA 1" --list=startup_stm
 
 
 
 ARM Macro Assembler    Page 10 
 
 
-03xe.s
+32f103xe.lst startup_stm32f103xe.s
 
 
 
@@ -1461,4 +1461,4 @@ Symbol: __main
       At line 168 in file startup_stm32f103xe.s
 Comment: __main used once
 2 symbols
-422 symbols in table
+423 symbols in table
