@@ -25,15 +25,8 @@ __IO uint8_t Rx_Buf[50];       //接收数据缓存
 
 extern uint8_t UART4_RX_BUF[64]; //接收到的数据
 
+extern uint8_t new_msg ;
 double destination_height;
-
-
-uint8_t new_msg = 0;
-uint8_t USART1_JSON_BUF[256]; //接收到的数据
-uint8_t USART1_RX_STA=0; 
-uint16_t USART1_JSON_SIZE = 0;
-uint16_t USART1_JSON_INDEX = 0;
-uint8_t	USART1_JSON_CRC = 0;
 
 int is_distance_receiving = 1;  //表示红外一直在接收数据
 int is_distance_right = 1;      //表示红外接收数据正常，为D = ***m，而非Error
@@ -96,6 +89,7 @@ int main(void)
   MX_DEBUG_USART_Init();
   RS485_USARTx_Init();
 	uart4_init(115200);
+	uart5_init(115200);
 	/* timer init */
 	TIM3_Init(5000-1,7200-1);       	//定时器3初始化，定时器时钟为84M，分频系数为8400-1，
 										//所以定时器3的频率为72M/7200=10K，自动重装载为5000-1，那么定时器周期就是500ms
@@ -156,6 +150,7 @@ int main(void)
 		//处理取货单元发来的消息
 		if(new_msg)
 		{
+			printf("new_msg == 1/n");
 			//printf("%s\n",USART1_JSON_BUF);
 			switch(resolve_msg())
 			{
@@ -208,54 +203,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
     }
     else i = 0;
   }
-	//与取货单元通信的串口中断处理函数
-#define UART_IDLE 0
-#define WELL 1 //收到#
-#define EXCLAMATION 2 //收到！
-#define HIGH_SIZE 3
-#define LOW_SIZE 4
-#define JSON_END 5
-#define STAR 6
-#define CRC_CHECK 7
-#define AND 8
+
 	if(UartHandle->Instance == DEBUG_USARTx)
   {
-    uint8_t res = husart_debug.Instance->DR;
-    switch(USART1_RX_STA)
-		{
-			case(UART_IDLE):	{if(res == '#') 							USART1_RX_STA = WELL;					break;}
-			case(WELL):				{if(res == '!') 							USART1_RX_STA = EXCLAMATION;	break;}
-			case(EXCLAMATION):{USART1_JSON_SIZE = res<<8; 	USART1_RX_STA = HIGH_SIZE;		break;}
-			case(HIGH_SIZE):	{USART1_JSON_SIZE += res; 		USART1_RX_STA = LOW_SIZE;			break;}
-			case(LOW_SIZE):		
-			{
-				if(USART1_JSON_INDEX < USART1_JSON_SIZE -1)
-				{
-					USART1_JSON_BUF[USART1_JSON_INDEX]=res; 
-					USART1_JSON_INDEX++;
-				}
-				else if(USART1_JSON_INDEX == USART1_JSON_SIZE -1) //JSON的最后一个字节了
-				{
-					USART1_JSON_BUF[USART1_JSON_INDEX]=res; 
-					USART1_JSON_BUF[USART1_JSON_SIZE]= '\0'; 
-					USART1_JSON_INDEX = 0;
-					USART1_RX_STA = JSON_END;
-					
-				}					
-				break;
-			}
-			case(JSON_END):		{if(res == '*')								USART1_RX_STA = STAR; 				break;}
-			case(STAR):				{USART1_JSON_CRC = res; 			USART1_RX_STA = CRC_CHECK;		break;}
-			case(CRC_CHECK):  
-			{
-				if(res == '&')
-				{
-					USART1_RX_STA = UART_IDLE;
-					new_msg = 1;
-				}
-				break;
-			}
-		}	
+    
 		
   }
 }

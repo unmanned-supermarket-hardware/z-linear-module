@@ -42,8 +42,8 @@ extern int state ;
 extern double current_height_in_m;
 extern double destination_height;
 extern int global_state ;
-extern u8 USART1_JSON_BUF[256]; //接收到的数据
-extern u8 USART1_JSON_CRC;
+extern u8 UART5_JSON_BUF[256]; //接收到的数据
+extern u8 UART5_JSON_CRC;
 extern int is_distance_receiving ;  //表示红外一直在接收数据
 extern int is_distance_right ;      //表示红外接收数据正常，为D = ***m，而非Error
 

@@ -83,15 +83,15 @@ int resolve_msg(void)  //Ω‚Œˆ»°ªıµ•‘™Õ®π˝¥Æø⁄“ª¥´¿¥µƒ√¸¡Ó£¨∑µªÿbusinessType£¨≤¢∏
 	char businessType[5];
 	int	res;
 	//CRC—È÷§
-	if(USART1_JSON_CRC != crc8_calculate(USART1_JSON_BUF,strlen((char *)USART1_JSON_BUF)))
+	if(UART5_JSON_CRC != crc8_calculate(UART5_JSON_BUF,strlen((char *)UART5_JSON_BUF)))
 	{
 		//¥À ±ªπ√ª”–parse root1£¨ø…“‘÷±Ω”return¡À
 		printf("error! wrong crc\n");
 		return MSG_WRONG_CRC;
 	}
-	root1 = cJSON_Parse((char *)USART1_JSON_BUF);
+	root1 = cJSON_Parse((char *)UART5_JSON_BUF);
 	
-	//printf("%s\n",USART1_JSON_BUF);
+	//printf("%s\n",UART5_JSON_BUF);
 	//JSON ”––ß–‘≈–∂œ
 	if(root1 == NULL) return MSG_WRONG_JSON;
 	
@@ -135,7 +135,7 @@ void on_go_to_height_msg()
 	u8 strSendLen;
 	
 	int result = SUCCESS;
-	
+	printf(" ’µΩœ˚œ¢¡À£°/n");
 	if(goTo(destination_height)!= 1) result = FAIL;
 	//∏Ê÷™»°ªıµ•‘™“—æ≠µΩ¥Ôœ‡”¶Œª÷√
 	root=cJSON_CreateObject();

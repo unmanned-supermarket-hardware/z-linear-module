@@ -26,6 +26,8 @@
 uint8_t aRxBuffer4[RXBUFFERSIZE];//HAL??????????
 UART_HandleTypeDef UART4_Handler; //UART?? 
 
+uint8_t aRxBuffer5[RXBUFFERSIZE];//HAL??????????
+UART_HandleTypeDef UART5_Handler; //UART?? 
 
 UART_HandleTypeDef husart_debug;
 DMA_HandleTypeDef hdma_debug_rx;
@@ -38,7 +40,7 @@ UART_HandleTypeDef husartx_rs485;
 
 void send_msg_to_good_getter(uint8_t *msg,int len)
 {
-	HAL_UART_Transmit(&husart_debug,msg,len,0x0F);
+	HAL_UART_Transmit(&UART5_Handler,msg,len,0x0F);
 }
 
 /**
@@ -141,6 +143,32 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
 		HAL_NVIC_EnableIRQ(UART4_IRQn);				//??USART1????
 		HAL_NVIC_SetPriority(UART4_IRQn,1,1);			//?????3,????3
+
+	
+	}
+	
+		if(huart->Instance==UART5)//?????1,????1 MSP???
+	{
+		//GPIO????
+	GPIO_InitTypeDef GPIO_Initure;
+		__HAL_RCC_GPIOC_CLK_ENABLE();			
+		__HAL_RCC_GPIOD_CLK_ENABLE();	
+		__HAL_RCC_UART5_CLK_ENABLE();			
+		__HAL_RCC_AFIO_CLK_ENABLE();
+	
+		GPIO_Initure.Pin=GPIO_PIN_12;			//
+		GPIO_Initure.Mode=GPIO_MODE_AF_PP;		//??????
+		GPIO_Initure.Pull=GPIO_PULLUP;			//??
+		GPIO_Initure.Speed=GPIO_SPEED_FREQ_HIGH;//??
+		HAL_GPIO_Init(GPIOC,&GPIO_Initure);	   	//???PA9
+
+		GPIO_Initure.Pin=GPIO_PIN_2;			//
+		GPIO_Initure.Mode=GPIO_MODE_AF_INPUT;	//????????????!	
+		HAL_GPIO_Init(GPIOD,&GPIO_Initure);	   	//???PA10
+		
+
+		HAL_NVIC_EnableIRQ(UART5_IRQn);				//??USART1????
+		HAL_NVIC_SetPriority(UART5_IRQn,1,1);			//?????3,????3
 
 	
 	}
@@ -265,7 +293,21 @@ void uart4_init(uint32_t bound)
 	HAL_UART_Receive_IT(&UART4_Handler, (uint8_t *)aRxBuffer4, RXBUFFERSIZE);//??????????:???UART_IT_RXNE,?????????????????????
   
 }
- 
+void uart5_init(uint32_t bound)
+{	
+	//UART ?????
+	UART5_Handler.Instance=UART5;					    //USART
+	UART5_Handler.Init.BaudRate=bound;				    //???
+	UART5_Handler.Init.WordLength=UART_WORDLENGTH_8B;   //???8?????
+	UART5_Handler.Init.StopBits=UART_STOPBITS_1;	    //?????
+	UART5_Handler.Init.Parity=UART_PARITY_NONE;		    //??????
+	UART5_Handler.Init.HwFlowCtl=UART_HWCONTROL_NONE;   //?????
+	UART5_Handler.Init.Mode=UART_MODE_TX_RX;		    //????
+	HAL_UART_Init(&UART5_Handler);					    //HAL_UART_Init()???UART1
+	
+	HAL_UART_Receive_IT(&UART5_Handler, (uint8_t *)aRxBuffer5, RXBUFFERSIZE);//??????????:???UART_IT_RXNE,?????????????????????
+  
+}
 #define USART_REC_LEN  			200  	//定义最大接收字节数 200
 uint8_t UART4_RX_BUF[64]; //接收到的数据
 uint16_t UART4_RX_STA=0; 
@@ -343,4 +385,67 @@ void UART4_IRQHandler(void)
 	}
 }	
 
+	//与取货单元通信的串口中断处理函数
+#define UART_IDLE 0
+#define WELL 1 //收到#
+#define EXCLAMATION 2 //收到！
+#define HIGH_SIZE 3
+#define LOW_SIZE 4
+#define JSON_END 5
+#define STAR 6
+#define CRC_CHECK 7
+#define AND 8
+
+
+
+uint8_t new_msg = 0;
+uint8_t UART5_JSON_BUF[256]; //接收到的数据
+uint8_t UART5_RX_STA=0; 
+uint16_t UART5_JSON_SIZE = 0;
+uint16_t UART5_JSON_INDEX = 0;
+uint8_t	UART5_JSON_CRC = 0;
+void UART5_IRQHandler(void)     
+{
+	if((__HAL_UART_GET_FLAG(&UART5_Handler,UART_FLAG_RXNE)!=RESET))  //????(?????????0x0d 0x0a??)
+	{
+		uint8_t res=UART5->DR; 
+//	printf("%c\n",res);
+//		HAL_UART_Transmit(&UART5_Handler,&res,1,0x0F);
+    switch(UART5_RX_STA)
+		{
+			case(UART_IDLE):	{if(res == '#') 							UART5_RX_STA = WELL;					break;}
+			case(WELL):				{if(res == '!') 							UART5_RX_STA = EXCLAMATION;	break;}
+			case(EXCLAMATION):{UART5_JSON_SIZE = res<<8; 	UART5_RX_STA = HIGH_SIZE;		break;}
+			case(HIGH_SIZE):	{UART5_JSON_SIZE += res; 		UART5_RX_STA = LOW_SIZE;			break;}
+			case(LOW_SIZE):		
+			{
+				if(UART5_JSON_INDEX < UART5_JSON_SIZE -1)
+				{
+					UART5_JSON_BUF[UART5_JSON_INDEX]=res; 
+					UART5_JSON_INDEX++;
+				}
+				else if(UART5_JSON_INDEX == UART5_JSON_SIZE -1) //JSON的最后一个字节了
+				{
+					UART5_JSON_BUF[UART5_JSON_INDEX]=res; 
+					UART5_JSON_BUF[UART5_JSON_SIZE]= '\0'; 
+					UART5_JSON_INDEX = 0;
+					UART5_RX_STA = JSON_END;
+					
+				}					
+				break;
+			}
+			case(JSON_END):		{if(res == '*')								UART5_RX_STA = STAR; 				break;}
+			case(STAR):				{UART5_JSON_CRC = res; 			UART5_RX_STA = CRC_CHECK;		break;}
+			case(CRC_CHECK):  
+			{
+				if(res == '&')
+				{
+					UART5_RX_STA = UART_IDLE;
+					new_msg = 1;
+				}
+				break;
+			}
+		}	
+	}
+}	
 /******************* (C) COPYRIGHT 2015-2020 硬石嵌入式开发团队 *****END OF FILE****/

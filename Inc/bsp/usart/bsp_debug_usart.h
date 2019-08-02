@@ -13,7 +13,8 @@ extern uint8_t aRxBuffer4[RXBUFFERSIZE];			//HAL?USART??Buffer
 void uart4_init(uint32_t bound);
 
 
-
+extern uint8_t aRxBuffer5[RXBUFFERSIZE];			//HAL?USART??Buffer
+void uart5_init(uint32_t bound);
 /* 类型定义 ------------------------------------------------------------------*/
 /* 宏定义 --------------------------------------------------------------------*/
 #define DEBUG_USARTx                                 USART1
