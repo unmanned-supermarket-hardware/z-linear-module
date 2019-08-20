@@ -117,18 +117,10 @@ int main(void)
   /* 无限循环 */
   while (1)
   {
-		 
-//		HAL_Delay(2000);
-//		SetSpeed(REG_SP3,600);      
-//		HAL_Delay(2000);
-//		SetSpeed(REG_SP3,-600); 
-
 //		goTo(0.7);
 //		HAL_Delay(2000);
 //		goTo(0.5);
 //		HAL_Delay(2000);
-		
-		
 		
 		//测距模块监视
 		distanceModuleMonitor++;
@@ -158,13 +150,6 @@ int main(void)
 			}
 			new_msg = 0;
 		}
-
-
-
-
-
-
-		
   }
 }
 
