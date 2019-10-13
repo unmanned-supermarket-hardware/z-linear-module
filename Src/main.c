@@ -136,13 +136,15 @@ int main(void)
 		if(!is_distance_receiving || !is_distance_right)
 		{
 			//电机运动逻辑得考虑啊
+					/* 初始化测距模块 */
+			HAL_UART_Transmit(&UART4_Handler,(uint8_t *)"iFACM:0",7,0x0F);
 			;
 		}
 		
 		//处理取货单元发来的消息
 		if(new_msg)
 		{
-			printf("new_msg == 1/n");
+			printf("---------------------------new_msg == 1/n-------------------------------");
 			//printf("%s\n",USART1_JSON_BUF);
 			switch(resolve_msg())
 			{

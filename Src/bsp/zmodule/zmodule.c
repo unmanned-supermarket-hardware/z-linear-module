@@ -51,7 +51,7 @@ int generate_send_str(cJSON *root,char * strSend)
 	u16 jsonSize;
 	if(root == NULL) 
 	{
-		printf("error: generate_send_str: not a json!\n");
+		printf("-----------------error: generate_send_str: not a json!--------------------------\n");
 		return 0;
 	}
 		
@@ -63,7 +63,7 @@ int generate_send_str(cJSON *root,char * strSend)
 	
 	if(jsonSize > MAX_JSON_SIZE)
 	{
-		printf("error: generate_send_str:json size too big! = %d\n",jsonSize);
+		printf("-------------------error: generate_send_str:json size too big! = %d\n-------------------------",jsonSize);
 		return 0;
 	}
 	strSend[2] = jsonSize>>8 & 0x00ff;
@@ -86,7 +86,7 @@ int resolve_msg(void)  //½âÎöÈ¡»õµ¥ÔªÍ¨¹ı´®¿ÚÒ»´«À´µÄÃüÁî£¬·µ»ØbusinessType£¬²¢¸
 	if(UART5_JSON_CRC != crc8_calculate(UART5_JSON_BUF,strlen((char *)UART5_JSON_BUF)))
 	{
 		//´ËÊ±»¹Ã»ÓĞparse root1£¬¿ÉÒÔÖ±½ÓreturnÁË
-		printf("error! wrong crc\n");
+		printf("-----------------------error: wrong crc\n--------------------------");
 		return MSG_WRONG_CRC;
 	}
 	root1 = cJSON_Parse((char *)UART5_JSON_BUF);
@@ -135,7 +135,7 @@ void on_go_to_height_msg()
 	u8 strSendLen;
 	
 	int result = SUCCESS;
-	printf("ÊÕµ½ÏûÏ¢ÁË£¡/n");
+	printf("----------------------------ÊÕµ½ÏûÏ¢ÁË£¡/n--------------------------------");
 	if(goTo(destination_height)!= 1) result = FAIL;
 	//¸æÖªÈ¡»õµ¥ÔªÒÑ¾­µ½´ïÏàÓ¦Î»ÖÃ
 	root=cJSON_CreateObject();
@@ -147,6 +147,8 @@ void on_go_to_height_msg()
 	{
 		//·¢ËÍ
 		send_msg_to_good_getter((uint8_t *)strSend,strSendLen);
+		printf("send following message:\n");
+		HAL_UART_Transmit(&husart_debug,(uint8_t *)strSend,strSendLen,0x0F);
 	}
 
 	//ÇåÀíÄÚ´æ
@@ -190,7 +192,7 @@ void on_check_msg()
 //------------------------------------------Ç°ÍùÄ³¸öÎ»ÖÃ-----------------------------------------
 int goTo(double destination_height_in_m)
 {
-	printf("goto");
+	printf("goto£º %f",destination_height_in_m);
 	double distance2Go;
 	SetSpeed(REG_SP3,0);
 	StartServo(); 

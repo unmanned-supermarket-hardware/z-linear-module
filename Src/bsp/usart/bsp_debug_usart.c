@@ -349,14 +349,14 @@ void UART4_IRQHandler(void)
 						if(UART4_RX_BUF[0] =='D')
 						{
 				
-							current_height_in_m = atof(dStr);
+							current_height_in_m = 2.15 -atof(dStr);
 							is_distance_right = 1;
 						}
 							
 						else
 						{
 							current_height_in_m =-1;
-							is_distance_right = 1;
+							is_distance_right = 0;
 						}
 						//-------------------
 

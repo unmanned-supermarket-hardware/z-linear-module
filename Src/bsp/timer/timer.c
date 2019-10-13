@@ -59,6 +59,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(htim==(&TIM3_Handler))
     {
-        printf("current_height_in_m =  \ndStr = %s\n\n",UART4_RX_BUF);	
+        printf("dStr = %s\n\n",UART4_RX_BUF);	
     }
 }

@@ -33,8 +33,8 @@ extern double current_height_in_m;
 #define TOO_LOW 5
 
 //方向定义
-#define DIR_HIGH -1  //高，远离电机，负
-#define DIR_LOW 1
+#define DIR_HIGH 1  //高，远离电机，负
+#define DIR_LOW -1
 
 //控制模组运动到某个固定位置,含测距
 
